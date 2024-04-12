@@ -37,9 +37,15 @@ void rand_dirc(int& x, int& y){
 
 int rand_choose(unordered_set<int>& S, mt19937& mt){
     auto iter = S.begin();
-    advance(iter, mt()%S.size());
+    advance(iter, mt() % S.size());
     int x = *iter;
+    S.erase(x);
     return x;
+}
+
+void rotate(int& x, int& y){
+    swap(x,y);
+    x*=-1;
 }
 
 int main(){
@@ -59,7 +65,6 @@ int main(){
     if (H % 2 == 0) ++H;
     if (W % 2 == 0) ++W;
 
-    cerr << H << " " << W << "\n";
     UF.init(H,W);
 
     unordered_set<int> Start;
@@ -79,20 +84,34 @@ int main(){
         int s = rand_choose(Start, mt);
         int x = s%W; int dx;
         int y = s/W; int dy;
+        stack<int> used;
         bool stop = 0;
         for (int i = 0; i < cnt; ++i){
             while(1){
-                rand_dirc(dx,dy);
-                int nx = x+dx*2; int ny = y+dy*2;
+                rand_dirc(dx,dy); int t = 0;
+                int nx = x+dx*2;
+                int ny = y+dy*2;
+                while(UF.same(y*W+x, ny*W+nx)){
+                    rotate(dx,dy);
+                    t++;
+                    if (t == 4){
+                        if (used.empty()) break;
+                        int ns = used.top();
+                        used.pop();
+                        x = ns%W;
+                        y = ns/W;
+                        t = 0;
+                    }
+                    nx = x+dx*2; ny = y+dy*2;
+                }
                 if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
-                if (UF.same(x*W+y, nx*W+ny)) break;
-                if (UF.siz[UF.root(nx*W+ny)] > 1) stop = 1;
-                UF.unite(x*W+y, (dx+x)*W+(dy+y));
-                UF.unite(x*W+y, nx*W+ny);
+                if (UF.siz[UF.root(ny*W+nx)] > 1) stop = 1;
+                UF.unite(y*W+x, (dy+y)*W+(dx+x));
+                UF.unite(y*W+x, ny*W+nx);
                 x = nx;
                 y = ny;
-                if (Start.count(s)) Start.erase(s);
-                if (Start.count(x*W+y)) Start.erase(x*W+y);
+                used.push(y*W+x);
+                if (Start.count(y*W+x)) Start.erase(y*W+x);
                 break;
             }
             if (stop) break;
@@ -106,6 +125,8 @@ int main(){
     for (int i = 0; i < H; ++i){
         for (int j = 0; j < W; ++j){
             if (UF.siz[UF.root(i*W+j)] > 1) cout << "# ";
+            else if (i == 1 && j == 1) cout << "S ";
+            else if (i == H-2 && j == W-2) cout << "G ";
             else cout << "  ";
         }
         cout << "\n";
