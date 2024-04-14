@@ -22,10 +22,10 @@ int main(){
 
     while(!que.empty()){
         int dx = 0, dy = -1;
+        auto [nx, ny] = que.front();
+        que.pop();
         for (int i = 0; i < 4; ++i){
             rotate(dx,dy);
-            auto [nx, ny] = que.front();
-            que.pop();
             if (nx+dx < 0 || nx+dx >= H || ny+dy < 0 || ny+dy >= W) continue;
             if (maze[nx+dx][ny+dy] == '#') continue;
             if (dist[nx+dx][ny+dy] != -1) continue;
